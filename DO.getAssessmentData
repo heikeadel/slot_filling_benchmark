@@ -1,0 +1,31 @@
+#!/bin/bash
+
+mkdir data
+
+# get data
+python -u getData.py > data/dataFromAssessment
+
+# if you used debug>0 in getData.py, you should delete all debug messages now
+cat data/dataFromAssessment | grep -v "^ERROR" | grep -v "^INFO" > data/dataFromAssessment.noDebug
+
+# clean data
+python -u cleanData.py data/dataFromAssessment.noDebug > data/dataFromAssessment.cleaned
+
+# split data genre wise into dev and eval
+python -u splitGenreIntoDevAndEval.py data/dataFromAssessment.cleaned data
+# delete duplicates
+cat data/news.dev | cut -d " " -f 3- | sort -u > data/news.dev.uniq
+cat data/news.eval | cut -d " " -f 3- | sort -u > data/news.eval.uniq
+cat data/web.dev | cut -d " " -f 3- | sort -u > data/web.dev.uniq
+cat data/web.eval | cut -d " " -f 3- | sort -u > data/web.eval.uniq
+
+# split data year wise
+python -u splitYearwise.py data/dataFromAssessment.cleaned
+# delete duplicates
+cat data/dataFromAssessment.cleaned.2012 | cut -d " " -f 3- | sort -u > data/dataFromAssessment.cleaned.2012.uniq
+cat data/dataFromAssessment.cleaned.2013 | cut -d " " -f 3- | sort -u > data/dataFromAssessment.cleaned.2013.uniq
+cat data/dataFromAssessment.cleaned.2014 | cut -d " " -f 3- | sort -u > data/dataFromAssessment.cleaned.2014.uniq
+
+# split into dev and eval sets
+cat data/dataFromAssessment.cleaned.2012.uniq data/dataFromAssessment.cleaned.2013.uniq > data/yearwise.dev
+cat data/dataFromAssessment.cleaned.2014.uniq > data/yearwise.eval
